@@ -37,13 +37,11 @@ func read_input(file_name string) ([]string, error) {
 
 func contains_str(matrix []string, i int, j int, needle string, direction []int) bool {
     index := 0
-    step_i := index * direction[0] + i
-    step_j := index * direction[1] + j
     
-    for matrix[step_i][step_j] != '.' && matrix[step_i][step_j] == needle[index] {
+    for matrix[i][j] == needle[index] {
         index++
-        step_i = i + index * direction[0]
-        step_j = j + index * direction[1]
+        i += direction[0]
+        j += direction[1]
         
         if index == 4 {
             return true
@@ -84,9 +82,9 @@ func part2(matrix []string) {
         for j := 1; j < len(matrix[0]) - 1; j++ {
             if matrix[i][j] == 'A' && 
                 ((matrix[i - 1][j - 1] == 'M' && matrix[i + 1][j + 1] == 'S') ||
-                (matrix[i - 1][j - 1] == 'S' && matrix[i + 1][j + 1] == 'M')) &&
+                 (matrix[i - 1][j - 1] == 'S' && matrix[i + 1][j + 1] == 'M')) &&
                 ((matrix[i + 1][j - 1] == 'M' && matrix[i - 1][j + 1] == 'S') ||
-                (matrix[i + 1][j - 1] == 'S' && matrix[i - 1][j + 1] == 'M')) {
+                 (matrix[i + 1][j - 1] == 'S' && matrix[i - 1][j + 1] == 'M')) {
                     count++
                 }
         }
