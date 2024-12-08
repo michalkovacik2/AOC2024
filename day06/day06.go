@@ -50,15 +50,19 @@ func read_input(file_name string) ([][]byte, int, int, error) {
     return input, guard_x, guard_y, nil
 }
 
-func part1(matrix [][]byte, guard_x int, guard_y int) int {
+func part1(matrix [][]byte, guard_x int, guard_y int, direction_index int) (int, bool) {
     visited := make([][]int, len(matrix))
     for i := range visited {
         visited[i] = make([]int, len(matrix[0]))
     }
-    visited[guard_x][guard_y] = UP
+    
+    switch direction_index {
+        case 0: visited[guard_x][guard_y] = UP
+        case 1: visited[guard_x][guard_y] = RIGHT
+        case 2: visited[guard_x][guard_y] = DOWN
+        case 3: visited[guard_x][guard_y] = LEFT
+    }
     num_visited := 1
-
-    direction_index := 0 // Start at UP
 
     directions := [][]int {
         {-1,  0 },
@@ -85,6 +89,14 @@ func part1(matrix [][]byte, guard_x int, guard_y int) int {
             num_visited++
         }
         
+        // Loop detection
+        if (direction_index == 0 && ((visited[new_x][new_y] & UP) != 0)) ||
+           (direction_index == 1 && ((visited[new_x][new_y] & RIGHT) != 0)) ||
+           (direction_index == 2 && ((visited[new_x][new_y] & DOWN) != 0)) ||
+           (direction_index == 3 && ((visited[new_x][new_y] & LEFT) != 0)) {
+                return -1, true
+            }
+
         switch direction_index {
             case 0: visited[new_x][new_y] |= UP
             case 1: visited[new_x][new_y] |= RIGHT 
@@ -95,7 +107,7 @@ func part1(matrix [][]byte, guard_x int, guard_y int) int {
         x = new_x
         y = new_y
     }
-    return num_visited
+    return num_visited, false
 }
 
 func part2(matrix [][]byte, guard_x int, guard_y int) int {
@@ -129,51 +141,16 @@ func part2(matrix [][]byte, guard_x int, guard_y int) int {
 
         if !(new_x == guard_x && new_y == guard_y) && !obstruction_placed[new_x][new_y] {
             // Try putting # in front of current position
-            old_matrix_value := matrix[new_x][new_y]
             matrix[new_x][new_y] = '#'
             obstruction_placed[new_x][new_y] = true
-            visited := make([][]int, len(matrix))
-            for i := range matrix {
-                visited[i] = make([]int, len(matrix[i]))
-            }
-            direction_index2 := direction_index
-            xx, yy := x, y
 
-            for {
-                new_xx := xx + directions[direction_index2][0]
-                new_yy := yy + directions[direction_index2][1]
-
-                if matrix[new_xx][new_yy] == '0' {
-                    break
-                }
-                
-                if matrix[new_xx][new_yy] == '#' {
-                    direction_index2 = (direction_index2 + 1) % len(directions)
-                    continue
-                }
-
-                if (direction_index2 == 0 && ((visited[new_xx][new_yy] & UP) != 0)) ||
-                   (direction_index2 == 1 && ((visited[new_xx][new_yy] & RIGHT) != 0)) ||
-                   (direction_index2 == 2 && ((visited[new_xx][new_yy] & DOWN) != 0)) ||
-                   (direction_index2 == 3 && ((visited[new_xx][new_yy] & LEFT) != 0)) {
-                    // fmt.Println("Loop at: ", new_x, new_y)
-                    loop_counter++
-                    break
-                }
-
-                switch direction_index2 {
-                    case 0: visited[new_xx][new_yy] |= UP
-                    case 1: visited[new_xx][new_yy] |= RIGHT 
-                    case 2: visited[new_xx][new_yy] |= DOWN 
-                    case 3: visited[new_xx][new_yy] |= LEFT 
-                }
-
-                xx = new_xx
-                yy = new_yy
+            _, loop_detected := part1(matrix, x, y, direction_index)
+            if loop_detected {
+                loop_counter++
             }
 
             // Revert the change
-            matrix[new_x][new_y] = old_matrix_value
+            matrix[new_x][new_y] = '.'
         }
 
         x = new_x
@@ -188,7 +165,8 @@ func solve(file_name string) error {
         return err
     }
 
-    fmt.Println("Part1 visited:", part1(matrix, guard_x, guard_y))
+    visited, _ := part1(matrix, guard_x, guard_y, 0) // Start at UP
+    fmt.Println("Part1 visited:", visited)
     fmt.Println("Part2 loops:  ", part2(matrix, guard_x, guard_y))
 
     return nil
